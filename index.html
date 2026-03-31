@@ -909,26 +909,6 @@
             color: var(--ink-dim);
         }
 
-        .coord-hud {
-            position: fixed;
-            left: 16px;
-            bottom: 16px;
-            z-index: 260;
-            background: rgba(6, 10, 22, 0.7);
-            border: 1px solid rgba(159, 200, 255, 0.3);
-            color: var(--ink);
-            padding: 10px 12px;
-            border-radius: 12px;
-            font-size: 0.82rem;
-            letter-spacing: 0.06em;
-            backdrop-filter: blur(10px);
-        }
-
-        .coord-hud strong {
-            display: block;
-            font-size: 0.9rem;
-            letter-spacing: 0.08em;
-        }
 
         @keyframes stardrift {
             0% {
@@ -1084,10 +1064,6 @@
         <button class="control-btn" id="rabbitHideBtn" type="button">토끼 숨기기</button>
     </div>
 
-    <div class="coord-hud" id="coordHud">
-        <strong>좌표 표시</strong>
-        <div id="coordValue">X: 0px (0%) · Y: 0px (0%)</div>
-    </div>
 
     <audio id="hoverSound" src="sounds/hover.mp3" preload="auto"></audio>
 
@@ -1113,7 +1089,6 @@
         const modalTag = document.getElementById("modalTag");
         const modalBody = document.getElementById("modalBody");
         const modalClose = document.getElementById("modalClose");
-        const coordValue = document.getElementById("coordValue");
         const workSection = document.getElementById("work");
         const videoPlayBtn = document.getElementById("videoPlayBtn");
         const videoPauseBtn = document.getElementById("videoPauseBtn");
@@ -1650,13 +1625,6 @@
             if (event.key === "Escape" && modal.classList.contains("is-open")) closeModal();
         });
 
-        document.addEventListener("mousemove", (event) => {
-            const x = Math.max(0, Math.min(window.innerWidth, event.clientX));
-            const y = Math.max(0, Math.min(window.innerHeight, event.clientY));
-            const xPct = ((x / window.innerWidth) * 100).toFixed(1);
-            const yPct = ((y / window.innerHeight) * 100).toFixed(1);
-            coordValue.textContent = `X: ${Math.round(x)}px (${xPct}%) · Y: ${Math.round(y)}px (${yPct}%)`;
-        });
     </script>
 </body>
 </html>
