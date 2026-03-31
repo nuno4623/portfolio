@@ -39,11 +39,24 @@
             inset: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover;
             z-index: -4;
             opacity: 1;
             transition: opacity 0.8s ease;
             will-change: opacity;
+            overflow: hidden;
+        }
+
+        .bg-video iframe {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            min-width: 177.78vh;
+            min-height: 56.25vw;
+            width: 100vw;
+            height: 100vh;
+            border: 0;
+            pointer-events: none;
         }
 
         .bg-video.is-hidden {
@@ -948,12 +961,11 @@
     </style>
 </head>
 <body class="video-playing">
-    <video class="bg-video is-visible" id="bgVideoA" autoplay muted playsinline>
-        <source src="moon-bg.mp4" type="video/mp4" />
-    </video>
-    <video class="bg-video is-hidden" id="bgVideoB" autoplay muted playsinline>
-        <source src="moon-bg.mp4" type="video/mp4" />
-    </video>
+    <div class="bg-video is-visible" id="bgVideoA">
+        <iframe id="vimeoIframe"
+            src="https://player.vimeo.com/video/1178838656?background=1&autoplay=1&loop=1&muted=1"
+            frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+    </div>
     <div class="bg-overlay" aria-hidden="true"></div>
     <div class="bg-still is-visible" id="bgStillA" aria-hidden="true"></div>
     <div class="bg-still is-hidden" id="bgStillB" aria-hidden="true"></div>
@@ -1083,13 +1095,14 @@
         © 2026 NUNO. All rights reserved.
     </footer>
 
+    <script src="https://player.vimeo.com/api/player.js"></script>
     <script>
         const bgVideoA = document.getElementById("bgVideoA");
-        const bgVideoB = document.getElementById("bgVideoB");
-        const bgVideos = [bgVideoA, bgVideoB];
-        let activeVideoIndex = 0;
-        let isCrossfading = false;
-        const crossfadeSeconds = 0.8;
+        let vimeoPlayer = null;
+        const vimeoIframe = document.getElementById("vimeoIframe");
+        if (vimeoIframe) {
+            vimeoPlayer = new Vimeo.Player(vimeoIframe);
+        }
         const bgStillA = document.getElementById("bgStillA");
         const bgStillB = document.getElementById("bgStillB");
         const bgStills = [bgStillA, bgStillB];
@@ -1267,14 +1280,9 @@
         }
 
         function fadeOutActiveVideo() {
-            const activeVideo = bgVideos[activeVideoIndex];
-            if (!activeVideo) return;
-            activeVideo.classList.add("is-fading");
-            activeVideo.classList.add("is-top");
-            setTimeout(() => {
-                activeVideo.pause();
-                activeVideo.classList.remove("is-fading");
-            }, 600);
+            if (vimeoPlayer) vimeoPlayer.pause();
+            bgVideoA.classList.add("is-fading");
+            setTimeout(() => bgVideoA.classList.remove("is-fading"), 600);
         }
 
         function setActive(button, isActive) {
@@ -1292,35 +1300,18 @@
             });
         }
 
-        function showVideoInstant(video) {
-            video.style.transition = "none";
-            video.classList.remove("is-hidden");
-            video.classList.add("is-visible");
-            video.classList.remove("is-fading");
-            void video.offsetHeight;
-            video.style.transition = "";
+        function showVideoInstant() {
+            bgVideoA.classList.remove("is-hidden");
+            bgVideoA.classList.add("is-visible");
         }
 
         if (videoPlayBtn && videoPauseBtn) {
             videoPlayBtn.addEventListener("click", () => {
                 hideStill();
-                const activeVideo = bgVideos[activeVideoIndex];
-                const attempt = activeVideo.play();
-                if (attempt && typeof attempt.catch === "function") {
-                    attempt.catch(() => {});
-                }
                 hideRabbitOverlay();
-                const inactiveVideo = bgVideos[1 - activeVideoIndex];
-                inactiveVideo.pause();
-                inactiveVideo.currentTime = 0;
-                inactiveVideo.classList.add("is-hidden");
-                inactiveVideo.classList.remove("is-visible");
-                inactiveVideo.classList.remove("is-fading");
-                inactiveVideo.classList.remove("is-top");
-                activeVideo.classList.add("is-visible");
-                activeVideo.classList.remove("is-hidden");
-                activeVideo.classList.remove("is-fading");
-                activeVideo.classList.add("is-top");
+                if (vimeoPlayer) vimeoPlayer.play();
+                bgVideoA.classList.add("is-visible");
+                bgVideoA.classList.remove("is-hidden");
                 document.body.classList.add("video-playing");
                 document.body.classList.remove("video-paused");
                 setActive(videoPlayBtn, true);
@@ -1330,7 +1321,7 @@
             });
 
             videoPauseBtn.addEventListener("click", () => {
-                bgVideos.forEach((video) => video.pause());
+                if (vimeoPlayer) vimeoPlayer.pause();
                 document.body.classList.remove("video-playing");
                 document.body.classList.add("video-paused");
                 setActive(videoPlayBtn, false);
@@ -1575,8 +1566,7 @@
                 advanceNotice();
                 return;
             }
-            const activeVideo = bgVideos[activeVideoIndex];
-            if (!activeVideo.paused && !activeVideo.ended && !hasCompletedFirstLoop && !hasShownNotice) {
+            if (!hasShownNotice) {
                 hasShownNotice = true;
                 showNotice(true, false);
             }
@@ -1608,60 +1598,10 @@
         hideRabbitOverlay();
 
         window.addEventListener("load", () => {
-            bgVideos.forEach((video) => {
-                video.addEventListener("timeupdate", () => {
-                    if (isCrossfading) return;
-                    if (video !== bgVideos[activeVideoIndex]) return;
-                    if (!video.duration || Number.isNaN(video.duration)) return;
-                    if (video.currentTime < video.duration - crossfadeSeconds) return;
-                    const nextVideo = bgVideos[1 - activeVideoIndex];
-                    isCrossfading = true;
-                    nextVideo.pause();
-                    nextVideo.currentTime = 0.05;
-                    showVideoInstant(nextVideo);
-                    nextVideo.classList.remove("is-top");
-
-                    const startFade = () => {
-                        if (!hasCompletedFirstLoop) {
-                            hasCompletedFirstLoop = true;
-                            if (!hasShownNotice) {
-                                hasShownNotice = true;
-                                showNotice(true, false);
-                            }
-                        }
-                        const attempt = nextVideo.play();
-                        if (attempt && typeof attempt.catch === "function") {
-                            attempt.catch(() => {});
-                        }
-                        video.classList.add("is-fading");
-                        video.classList.add("is-top");
-                        video.classList.remove("is-visible");
-                        setTimeout(() => {
-                            video.pause();
-                            video.classList.remove("is-fading");
-                            video.classList.add("is-hidden");
-                            video.classList.remove("is-top");
-                            activeVideoIndex = 1 - activeVideoIndex;
-                            bgVideos[activeVideoIndex].classList.add("is-top");
-                            isCrossfading = false;
-                        }, crossfadeSeconds * 1000);
-                    };
-
-                    if (nextVideo.readyState >= 3) {
-                        startFade();
-                    } else {
-                        nextVideo.addEventListener("canplay", startFade, { once: true });
-                    }
-                });
-            });
-
-            const cards = document.querySelectorAll(".work-card video");
-            cards.forEach((video) => {
-                const attempt = video.play();
-                if (attempt && typeof attempt.catch === "function") {
-                    attempt.catch(() => {});
-                }
-            });
+            if (vimeoPlayer && !hasShownNotice) {
+                hasShownNotice = true;
+                showNotice(true, false);
+            }
         });
 
 
