@@ -1,0 +1,1729 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NUNO STUDIO</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&family=Jua&display=swap");
+
+        :root {
+            --ink: #f4f7ff;
+            --ink-dim: rgba(244, 247, 255, 0.75);
+            --deep: #0b1120;
+            --glass: rgba(9, 14, 28, 0.65);
+            --glow: rgba(159, 200, 255, 0.45);
+            --warm: #f6e3a8;
+            --mint: #c9f1e0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            font-family: "Plus Jakarta Sans", "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+            background: var(--deep);
+            overflow-x: hidden;
+        }
+
+        .bg-video {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -4;
+            opacity: 1;
+            transition: opacity 0.8s ease;
+            will-change: opacity;
+        }
+
+        .bg-video.is-hidden {
+            opacity: 0;
+        }
+
+        .bg-video.is-fading {
+            opacity: 0;
+        }
+
+        .bg-video.is-top {
+            z-index: -3;
+        }
+
+        .bg-video.is-visible {
+            opacity: 1;
+        }
+
+        .bg-overlay {
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.12), transparent 50%),
+                radial-gradient(circle at 80% 15%, rgba(201, 241, 224, 0.2), transparent 55%),
+                radial-gradient(circle at 40% 70%, rgba(246, 227, 168, 0.18), transparent 60%),
+                linear-gradient(180deg, rgba(6, 10, 22, 0.65), rgba(6, 10, 22, 0.2));
+            z-index: -2;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .starfield {
+            position: fixed;
+            inset: 0;
+            background-image:
+                radial-gradient(circle, rgba(255, 255, 255, 0.7) 0 1px, transparent 1.6px),
+                radial-gradient(circle, rgba(159, 200, 255, 0.4) 0 1px, transparent 2px);
+            background-size: 220px 220px, 320px 320px;
+            opacity: 0.3;
+            z-index: -1;
+            animation: stardrift 28s linear infinite;
+            pointer-events: none;
+        }
+
+        .interactive-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 40;
+            pointer-events: none;
+        }
+
+        .hotspot {
+            position: absolute;
+            width: clamp(70px, 9vw, 110px);
+            height: clamp(70px, 9vw, 110px);
+            border-radius: 18px;
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            transform: translate(-50%, -50%) scale(1);
+            transition: transform 0.2s ease;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        .hotspot::after {
+            content: "";
+            position: absolute;
+            inset: -50%;
+            border-radius: 42px;
+            background:
+                radial-gradient(circle, rgba(255, 230, 170, 0.5), transparent 68%),
+                radial-gradient(circle, rgba(173, 214, 255, 0.4), transparent 76%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            mix-blend-mode: screen;
+        }
+
+        .hotspot:hover,
+        .hotspot:focus-visible {
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+
+        .hotspot:hover::after,
+        .hotspot:focus-visible::after {
+            opacity: 0.6;
+        }
+
+        .hotspot-label {
+            position: absolute;
+            left: 50%;
+            bottom: 110%;
+            transform: translateX(-50%);
+            background: rgba(243, 230, 255, 0.7);
+            border: 1px solid rgba(206, 168, 245, 0.55);
+            color: #3b2b52;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-family: "Jua", "Baloo 2", "Plus Jakarta Sans", "Pretendard", "Noto Sans KR", sans-serif;
+            font-size: 1.9rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            white-space: nowrap;
+            width: max-content;
+        }
+
+        .hotspot:hover .hotspot-label,
+        .hotspot:focus-visible .hotspot-label {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-4px);
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 28px;
+            background: rgba(6, 10, 22, 0.72);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(159, 200, 255, 0.2);
+        }
+
+        .logo {
+            font-family: "Baloo 2", "Plus Jakarta Sans", serif;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #f8fbff;
+        }
+
+        nav {
+            display: flex;
+            gap: 24px;
+            font-size: 0.95rem;
+        }
+
+        nav a {
+            color: var(--ink-dim);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        nav a:hover {
+            color: #ffffff;
+        }
+
+        .hero {
+            display: none;
+        }
+
+        .hero h1 {
+            display: none;
+        }
+
+        .hero p {
+            display: none;
+        }
+
+        .notice {
+            position: fixed;
+            left: 50%;
+            top: 22%;
+            transform: translateX(-50%);
+            z-index: 120;
+            background: rgba(12, 20, 38, 0.58);
+            border: 2px solid rgba(155, 210, 255, 0.9);
+            color: #e9f4ff;
+            padding: 16px 32px;
+            border-radius: 22px;
+            font-family: "Jua", "Baloo 2", "Plus Jakarta Sans", "Pretendard", "Noto Sans KR", sans-serif;
+            font-size: 1.7rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            box-shadow:
+                0 0 24px rgba(120, 190, 255, 0.35),
+                inset 0 0 18px rgba(90, 160, 255, 0.25);
+            backdrop-filter: blur(6px);
+            opacity: 0;
+            pointer-events: auto;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .notice.is-visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-6px);
+        }
+
+        .notice::after {
+            content: "";
+            position: absolute;
+            inset: 7px;
+            border: 1px dashed rgba(180, 230, 255, 0.55);
+            border-radius: 16px;
+            pointer-events: none;
+        }
+
+
+        .hero .intro-meta {
+            margin-top: 24px;
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255, 235, 199, 0.22);
+            border: 1px solid rgba(255, 215, 140, 0.55);
+            color: #fff3d6;
+            font-size: 0.82rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .section-title {
+            font-family: "Baloo 2", "Plus Jakarta Sans", serif;
+            font-size: clamp(1.8rem, 3vw, 2.4rem);
+            margin: 0 0 18px;
+            letter-spacing: 0.04em;
+        }
+
+        .work-section {
+            padding: 40px 24px 110px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .work-section.is-hidden {
+            display: none;
+        }
+
+        .work-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 22px;
+        }
+
+        .work-card {
+            background: var(--glass);
+            border: 1px solid rgba(159, 200, 255, 0.2);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 18px 40px rgba(5, 10, 22, 0.4);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .work-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(246, 227, 168, 0.6);
+        }
+
+        .work-card video,
+        .work-card iframe,
+        .work-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+            border: 0;
+        }
+
+        .yt-facade {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .yt-facade img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .yt-play {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 52px;
+            height: 52px;
+            background: rgba(255, 255, 255, 0.88);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .yt-play::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 55%;
+            transform: translate(-50%, -50%);
+            border-style: solid;
+            border-width: 10px 0 10px 18px;
+            border-color: transparent transparent transparent #111;
+        }
+
+        .modal-video-card .yt-facade {
+            height: auto;
+            aspect-ratio: 16 / 9;
+        }
+
+        .modal-video-card .yt-facade iframe {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        .work-body {
+            padding: 16px 18px 20px;
+        }
+
+        .work-body h3 {
+            margin: 6px 0 8px;
+            font-size: 1.1rem;
+        }
+
+        .work-body p {
+            margin: 0;
+            color: var(--ink-dim);
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+
+        .contact {
+            padding: 40px 24px 120px;
+            max-width: 1120px;
+            margin: 0 auto;
+        }
+
+        .contact-card {
+            background: rgba(9, 14, 28, 0.7);
+            border: 1px solid rgba(159, 200, 255, 0.25);
+            border-radius: 22px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .contact-card span {
+            color: var(--ink-dim);
+        }
+
+        .bg-still {
+            position: fixed;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+            z-index: -2;
+            pointer-events: none;
+            will-change: opacity;
+        }
+
+        .bg-still.is-visible {
+            opacity: 1;
+        }
+
+        .bg-still.is-hidden {
+            opacity: 0;
+        }
+
+        .rabbit-overlay {
+            position: fixed;
+            inset: 0;
+            background-position: center;
+            background-size: cover;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            z-index: -1;
+        }
+
+        .rabbit-overlay.is-visible {
+            opacity: 1;
+        }
+
+        .control-bar {
+            position: fixed;
+            top: 18px;
+            right: 22px;
+            display: flex;
+            gap: 10px;
+            z-index: 240;
+            background: rgba(6, 10, 22, 0.65);
+            border: 1px solid rgba(159, 200, 255, 0.25);
+            padding: 10px 12px;
+            border-radius: 999px;
+            backdrop-filter: blur(12px);
+        }
+
+        .control-btn {
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(20, 28, 45, 0.7);
+            color: #f7fbff;
+            font-weight: 600;
+            padding: 8px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            letter-spacing: 0.06em;
+            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            border-color: rgba(246, 227, 168, 0.8);
+            background: rgba(32, 44, 70, 0.85);
+        }
+
+        .control-btn.is-active {
+            border-color: rgba(201, 241, 224, 0.8);
+            background: rgba(36, 52, 84, 0.9);
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(5, 10, 22, 0.7);
+            backdrop-filter: blur(12px);
+            z-index: 300;
+        }
+
+        .modal.is-open {
+            display: flex;
+        }
+
+        .modal-panel {
+            width: min(920px, 100%);
+            background: rgba(9, 14, 28, 0.95);
+            border: 1px solid rgba(159, 200, 255, 0.3);
+            border-radius: 24px;
+            box-shadow: 0 30px 70px rgba(5, 10, 22, 0.55);
+            padding: 28px 28px 30px;
+            color: var(--ink);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 14px;
+            gap: 16px;
+        }
+
+        .modal-heading {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .modal-title {
+            margin: 0;
+            font-family: "Plus Jakarta Sans", "Pretendard", "Noto Sans KR", sans-serif;
+            letter-spacing: 0.02em;
+            font-size: 1.6rem;
+        }
+
+        .modal-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(246, 227, 168, 0.2);
+            border: 1px solid rgba(246, 227, 168, 0.4);
+            font-size: 0.9rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            width: max-content;
+        }
+
+        .modal-body {
+            color: var(--ink-dim);
+            line-height: 1.7;
+            font-size: 1.14rem;
+        }
+
+        .modal-body ul {
+            margin: 12px 0 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .modal-body li {
+            margin-bottom: 12px;
+            position: relative;
+            padding-left: 32px;
+        }
+
+        .modal-body li::before {
+            content: "✦";
+            position: absolute;
+            left: 0;
+            top: 2px;
+            font-size: 1.05rem;
+            color: var(--warm);
+            text-shadow: 0 0 10px rgba(246, 227, 168, 0.45);
+        }
+
+        .tab-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .tab-btn {
+            border: 1px solid rgba(159, 200, 255, 0.35);
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--ink);
+            padding: 8px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            letter-spacing: 0.08em;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            transform: translateY(-1px);
+            border-color: rgba(246, 227, 168, 0.7);
+        }
+
+        .tab-btn.is-active {
+            background: rgba(246, 227, 168, 0.24);
+            border-color: rgba(246, 227, 168, 0.85);
+            color: #fff6d8;
+        }
+
+        .tab-panel {
+            display: none;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(159, 200, 255, 0.2);
+            border-radius: 16px;
+            padding: 16px 18px;
+        }
+
+        .tab-panel.is-active {
+            display: block;
+        }
+
+        .tab-panel h4 {
+            margin: 0 0 10px;
+            font-size: 1.15rem;
+            letter-spacing: 0.04em;
+            color: #f8fbff;
+        }
+
+        .tab-panel p {
+            margin: 0 0 10px;
+        }
+
+        .academy-module {
+            width: 100%;
+            text-align: left;
+            border: 1px solid rgba(159, 200, 255, 0.25);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--ink);
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            cursor: pointer;
+            margin: 6px 0 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .academy-module:hover {
+            border-color: rgba(246, 227, 168, 0.65);
+        }
+
+        .academy-note {
+            margin-top: 16px;
+            font-size: 0.92rem;
+            color: var(--ink-dim);
+        }
+
+        .academy-popup {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 10, 22, 0.78);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 420;
+        }
+
+        .academy-popup.is-open {
+            display: flex;
+        }
+
+        .academy-popup-panel {
+            width: min(640px, 100%);
+            background: rgba(9, 14, 28, 0.96);
+            border: 1px solid rgba(159, 200, 255, 0.3);
+            border-radius: 18px;
+            padding: 18px 20px 20px;
+            box-shadow: 0 24px 60px rgba(5, 10, 22, 0.55);
+        }
+
+        .academy-popup-title {
+            margin: 0 0 6px;
+            font-size: 1.15rem;
+            letter-spacing: 0.05em;
+        }
+
+        .academy-popup-sub {
+            margin: 0 0 12px;
+            color: var(--ink-dim);
+        }
+
+        .flow-steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .flow-step {
+            background: rgba(246, 227, 168, 0.12);
+            border: 1px solid rgba(246, 227, 168, 0.45);
+            color: #fff6d8;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+        }
+
+        .academy-popup-close {
+            margin-top: 14px;
+            border: 1px solid rgba(159, 200, 255, 0.35);
+            background: transparent;
+            color: var(--ink);
+            padding: 6px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+
+        .mail-submit {
+            border: none;
+            background: linear-gradient(135deg, rgba(246, 227, 168, 0.9), rgba(201, 241, 224, 0.9));
+            color: #1a2236;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-size: 1.02rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(246, 227, 168, 0.25);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .mail-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 28px rgba(201, 241, 224, 0.25);
+        }
+
+        .mail-header {
+            margin: 0 0 12px;
+            color: #f8fbff;
+            font-size: 1.1rem;
+        }
+
+        .mail-sub {
+            margin: 0 0 16px;
+            color: var(--ink-dim);
+        }
+
+        .mail-form {
+            display: grid;
+            gap: 12px;
+        }
+
+        .mail-field {
+            display: grid;
+            gap: 6px;
+        }
+
+        .mail-field label {
+            font-size: 0.92rem;
+            letter-spacing: 0.03em;
+            color: #f3f7ff;
+        }
+
+        .mail-field input,
+        .mail-field textarea {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(159, 200, 255, 0.25);
+            color: var(--ink);
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 0.95rem;
+        }
+
+        .mail-field textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .mail-options {
+            display: grid;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .mail-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            color: var(--ink-dim);
+        }
+
+        .direct-mail {
+            margin-top: 16px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px dashed rgba(201, 241, 224, 0.5);
+            background: rgba(201, 241, 224, 0.08);
+            color: var(--ink);
+        }
+
+        .direct-mail a {
+            color: #c9f1e0;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .mail-success {
+            display: none;
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(201, 241, 224, 0.12);
+            border: 1px solid rgba(201, 241, 224, 0.45);
+            color: #dff9f1;
+            font-size: 0.95rem;
+        }
+
+        .mail-success.is-visible {
+            display: block;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--ink);
+            font-size: 1.8rem;
+            cursor: pointer;
+        }
+
+        .modal-embed {
+            margin-top: 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px dashed rgba(159, 200, 255, 0.35);
+            padding: 18px;
+            border-radius: 16px;
+            text-align: center;
+            color: rgba(244, 247, 255, 0.75);
+        }
+
+        .modal-gallery {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .filter-btn {
+            border: 1px solid rgba(159, 200, 255, 0.3);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--ink);
+            padding: 6px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-1px);
+            border-color: rgba(246, 227, 168, 0.7);
+        }
+
+        .filter-btn.is-active {
+            background: rgba(246, 227, 168, 0.22);
+            border-color: rgba(246, 227, 168, 0.75);
+            color: #fff6d8;
+        }
+
+        .modal-video-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(159, 200, 255, 0.2);
+            border-radius: 16px;
+            padding: 10px;
+        }
+
+        .modal-video-card video,
+        .modal-video-card iframe {
+            width: 100%;
+            border-radius: 12px;
+            aspect-ratio: 16 / 9;
+            border: 0;
+        }
+
+        .modal-video-card h4 {
+            margin: 10px 4px 2px;
+            font-size: 0.95rem;
+        }
+
+        .modal-category {
+            display: inline-flex;
+            margin: 10px 4px 0;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(159, 200, 255, 0.3);
+            background: rgba(159, 200, 255, 0.12);
+            font-size: 0.72rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--ink-dim);
+        }
+
+        .coord-hud {
+            position: fixed;
+            left: 16px;
+            bottom: 16px;
+            z-index: 260;
+            background: rgba(6, 10, 22, 0.7);
+            border: 1px solid rgba(159, 200, 255, 0.3);
+            color: var(--ink);
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 0.82rem;
+            letter-spacing: 0.06em;
+            backdrop-filter: blur(10px);
+        }
+
+        .coord-hud strong {
+            display: block;
+            font-size: 0.9rem;
+            letter-spacing: 0.08em;
+        }
+
+        @keyframes stardrift {
+            0% {
+                transform: translate3d(0, 0, 0);
+            }
+            100% {
+                transform: translate3d(-18px, 14px, 0);
+            }
+        }
+
+        @media (max-width: 860px) {
+            header {
+                padding: 14px 18px;
+            }
+
+            nav {
+                gap: 16px;
+            }
+
+            .hero {
+                padding-top: 90px;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .interactive-layer {
+                pointer-events: none;
+            }
+        }
+    </style>
+</head>
+<body class="video-playing">
+    <video class="bg-video is-visible" id="bgVideoA" autoplay muted playsinline>
+        <source src="videos/moon-bg.mp4" type="video/mp4" />
+    </video>
+    <video class="bg-video is-hidden" id="bgVideoB" autoplay muted playsinline>
+        <source src="videos/moon-bg.mp4" type="video/mp4" />
+    </video>
+    <div class="bg-overlay" aria-hidden="true"></div>
+    <div class="bg-still is-visible" id="bgStillA" aria-hidden="true"></div>
+    <div class="bg-still is-hidden" id="bgStillB" aria-hidden="true"></div>
+    <div class="rabbit-overlay" id="rabbitOverlay" aria-hidden="true"></div>
+    <div class="starfield" aria-hidden="true"></div>
+    <div class="interactive-layer" id="interactiveLayer" aria-hidden="true">
+        <button class="hotspot" style="left: 15.9%; top: 81.0%;" data-id="academy" aria-label="달빛 아카데미">
+            <span class="hotspot-label">달빛 아카데미</span>
+        </button>
+        <button class="hotspot" style="left: 26.5%; top: 36.0%;" data-id="cinema" aria-label="스타라이트 시네마">
+            <span class="hotspot-label">스타라이트 시네마</span>
+        </button>
+        <button class="hotspot" style="left: 65.4%; top: 39.5%;" data-id="studio" aria-label="구름 창작소">
+            <span class="hotspot-label">구름 창작소</span>
+        </button>
+        <button class="hotspot" style="left: 49.0%; top: 57.3%;" data-id="hall" aria-label="토끼 마을회관">
+            <span class="hotspot-label">토끼 마을회관</span>
+        </button>
+        <button class="hotspot" style="left: 75.9%; top: 75.7%;" data-id="post" aria-label="은하수 우체국">
+            <span class="hotspot-label">은하수 우체국</span>
+        </button>
+    </div>
+
+    <header>
+        <div class="logo">NUNO STUDIO</div>
+        <nav>
+            <a href="#work">Work</a>
+            <a href="#contact">Contact</a>
+        </nav>
+    </header>
+
+    <div class="notice" id="notice">안녕하세요? NUNO입니다.</div>
+
+    <section id="work" class="work-section is-hidden">
+        <h2 class="section-title">Village Scenes</h2>
+                <div class="work-grid">
+            <article class="work-card">
+                <div class="yt-facade" data-ytid="N7XM185iHDI">
+                    <img src="https://img.youtube.com/vi/N7XM185iHDI/maxresdefault.jpg" alt="Lunar rabbit village">
+                    <div class="yt-play"></div>
+                </div>
+                <div class="work-body">
+                    <h3>달무리 광장</h3>
+                    <p>은은한 링 라이트가 퍼지는 마을 광장.</p>
+                </div>
+            </article>
+            <article class="work-card">
+                <div class="yt-facade" data-ytid="mOK7yFAOors">
+                    <img src="https://img.youtube.com/vi/mOK7yFAOors/maxresdefault.jpg" alt="Midnight prism">
+                    <div class="yt-play"></div>
+                </div>
+                <div class="work-body">
+                    <h3>토끼 수로</h3>
+                    <p>빛을 따라 흐르는 은빛 수로의 리듬.</p>
+                </div>
+            </article>
+            <article class="work-card">
+                <div class="yt-facade" data-ytid="D_HRcRyoUsU">
+                    <img src="https://img.youtube.com/vi/D_HRcRyoUsU/maxresdefault.jpg" alt="URBAN HALO">
+                    <div class="yt-play"></div>
+                </div>
+                <div class="work-body">
+                    <h3>구름 밭</h3>
+                    <p>포근한 솜구름 사이를 걷는 장면.</p>
+                </div>
+            </article>
+            <article class="work-card">
+                <div class="yt-facade" data-ytid="DpehAWnijS4">
+                    <img src="https://img.youtube.com/vi/DpehAWnijS4/maxresdefault.jpg" alt="태몽조율국">
+                    <div class="yt-play"></div>
+                </div>
+                <div class="work-body">
+                    <h3>달빛 창고</h3>
+                    <p>은은한 빛이 쌓이는 기억의 창고.</p>
+                </div>
+            </article>
+            <article class="work-card">
+                <div class="yt-facade" data-ytid="SY16gq4YVaI">
+                    <img src="https://img.youtube.com/vi/SY16gq4YVaI/maxresdefault.jpg" alt="Finding summer sky">
+                    <div class="yt-play"></div>
+                </div>
+                <div class="work-body">
+                    <h3>Finding summer sky</h3>
+                    <p>설명을 여기에 입력하세요.</p>
+                </div>
+            </article>
+            <article class="work-card">
+                <div class="yt-facade" data-ytid="WoHLDy9e4OI">
+                    <img src="https://img.youtube.com/vi/WoHLDy9e4OI/maxresdefault.jpg" alt="The dream house">
+                    <div class="yt-play"></div>
+                </div>
+                <div class="work-body">
+                    <h3>신규 프로젝트 6</h3>
+                    <p>설명을 여기에 입력하세요.</p>
+                </div>
+            </article>
+        </div>    </section>
+
+    <div class="modal" id="modal" aria-hidden="true">
+        <div class="modal-panel">
+            <div class="modal-header">
+                <div class="modal-heading">
+                    <h3 class="modal-title" id="modalTitle">TITLE</h3>
+                    <span class="modal-tag" id="modalTag">CATEGORY</span>
+                </div>
+                <button class="modal-close" id="modalClose" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <div class="control-bar" aria-label="Background Controls">
+        <button class="control-btn is-active" id="videoPlayBtn" type="button">영상 재생</button>
+        <button class="control-btn" id="videoPauseBtn" type="button">영상 정지</button>
+        <button class="control-btn" id="rabbitShowBtn" type="button">토끼 보이기</button>
+        <button class="control-btn" id="rabbitHideBtn" type="button">토끼 숨기기</button>
+    </div>
+
+    <div class="coord-hud" id="coordHud">
+        <strong>좌표 표시</strong>
+        <div id="coordValue">X: 0px (0%) · Y: 0px (0%)</div>
+    </div>
+
+    <audio id="hoverSound" src="sounds/hover.mp3" preload="auto"></audio>
+
+    <footer style="text-align:center;padding:24px 16px;color:var(--ink-dim);font-size:0.85rem;">
+        © 2026 NUNO. All rights reserved.
+    </footer>
+
+    <script>
+        const bgVideoA = document.getElementById("bgVideoA");
+        const bgVideoB = document.getElementById("bgVideoB");
+        const bgVideos = [bgVideoA, bgVideoB];
+        let activeVideoIndex = 0;
+        let isCrossfading = false;
+        const crossfadeSeconds = 0.8;
+        const bgStillA = document.getElementById("bgStillA");
+        const bgStillB = document.getElementById("bgStillB");
+        const bgStills = [bgStillA, bgStillB];
+        let activeStillIndex = 0;
+        const rabbitOverlay = document.getElementById("rabbitOverlay");
+        const modal = document.getElementById("modal");
+        const modalTitle = document.getElementById("modalTitle");
+        const modalTag = document.getElementById("modalTag");
+        const modalBody = document.getElementById("modalBody");
+        const modalClose = document.getElementById("modalClose");
+        const coordValue = document.getElementById("coordValue");
+        const workSection = document.getElementById("work");
+        const videoPlayBtn = document.getElementById("videoPlayBtn");
+        const videoPauseBtn = document.getElementById("videoPauseBtn");
+        const rabbitShowBtn = document.getElementById("rabbitShowBtn");
+        const rabbitHideBtn = document.getElementById("rabbitHideBtn");
+        const hoverSound = document.getElementById("hoverSound");
+        const notice = document.getElementById("notice");
+        let hasCompletedFirstLoop = false;
+        let hasShownNotice = false;
+
+        const rabbitVisibleImage = "images/rabbit-visible.png.jpg";
+        const rabbitHiddenImage = "images/rabbit-hidden.png.png";
+
+                const buildingData = {
+            academy: {
+                title: "달빛 아카데미",
+                tag: "교육 기획",
+                bodyHtml: `
+                    <p>AI와 에듀테크로 디자인하는 미래형 영어 수업</p>
+                    <div class="tab-group" role="tablist" aria-label="달빛 아카데미 탭">
+                        <button type="button" class="tab-btn is-active" data-tab="academy-1" role="tab" aria-selected="true">🖋 1</button>
+                        <button type="button" class="tab-btn" data-tab="academy-2" role="tab" aria-selected="false">🖼 2</button>
+                        <button type="button" class="tab-btn" data-tab="academy-3" role="tab" aria-selected="false">🎮 3</button>
+                    </div>
+                    <div class="tab-panel is-active" data-panel="academy-1" role="tabpanel">
+                        <h4>AI 비주얼 라이팅 (AI Visual Writing)</h4>
+                        <button type="button" class="academy-module" data-flow="ChatGPT · Gemini → Canva → AI 이미지/영상 → 보이스오버" data-title="AI 비주얼 라이팅">NUNO 선생님의 수업 현장 엿보기 <span>↗</span></button>
+                        <p><strong>컨셉</strong>: 텍스트를 넘어 시각적 경험으로 확장하는 글쓰기</p>
+                        <ul>
+                            <li><strong>Canva 아트워크</strong><br>영어 지문을 바탕으로 나만의 포스터와 브로셔 디자인하기.</li>
+                            <li><strong>AI 스토리텔링</strong><br>직접 쓴 영어 문장을 AI 이미지/영상으로 구현하여 생동감 있는 서사 만들기.</li>
+                            <li><strong>보이스 오버</strong><br>자신의 목소리를 녹음해 영상에 입히며 발음과 억양을 자연스럽게 익히는 멀티미디어 스피킹 학습.</li>
+                        </ul>
+                    </div>
+                    <div class="tab-panel" data-panel="academy-2" role="tabpanel">
+                        <h4>디지털 갤러리 &amp; 협력 학습 (Digital Gallery)</h4>
+                        <button type="button" class="academy-module" data-flow="Padlet → 실시간 피드백 → 수정/개선 → 디지털 전시" data-title="디지털 갤러리">NUNO 선생님의 수업 현장 엿보기 <span>↗</span></button>
+                        <p><strong>컨셉</strong>: 시공간을 넘어 소통하는 우리들만의 전시 공간</p>
+                        <ul>
+                            <li><strong>Padlet 아카이브</strong><br>친구들과 실시간으로 피드백을 주고받으며 영어 작품을 전시하고 함께 성장하는 디지털 포트폴리오 구축.</li>
+                            <li><strong>상호작용 기반 학습</strong><br>서로의 게시물에 댓글을 달며 자연스럽게 익히는 실전 영어 커뮤니케이션.</li>
+                        </ul>
+                    </div>
+                    <div class="tab-panel" data-panel="academy-3" role="tabpanel">
+                        <h4>게임화된 학습 경험 (Gamified Learning)</h4>
+                        <button type="button" class="academy-module" data-flow="Kahoot/Blooket → 퀴즈 배틀 → 결과 분석 → 맞춤 보충" data-title="게임화된 학습">NUNO 선생님의 수업 현장 엿보기 <span>↗</span></button>
+                        <p><strong>컨셉</strong>: 배움이 즐거운 놀이가 되는 순간</p>
+                        <ul>
+                            <li><strong>Kahoot! &amp; Blooket 활용</strong><br>단원 정리와 핵심 어휘 복습을 실시간 퀴즈 배틀로 진행하여 학습 몰입도 극대화.</li>
+                            <li><strong>데이터 기반 피드백</strong><br>퀴즈 결과를 통해 학생별 취약점을 분석하고 맞춤형 보충 학습 기회 제공.</li>
+                        </ul>
+                    </div>
+                    <p class="academy-note">작품은 매 학기 우리 아이들과 함께 새롭게 채워집니다. 지금은 제가 설계한 수업의 청사진을 구경해 보세요!</p>
+                    <div class="academy-popup" id="academyPopup" aria-hidden="true">
+                        <div class="academy-popup-panel" role="dialog" aria-modal="true" aria-label="NUNO 선생님의 수업 현장 엿보기">
+                            <h4 class="academy-popup-title">NUNO 선생님의 수업 현장 엿보기</h4>
+                            <p class="academy-popup-sub" id="academyPopupSub">수업 흐름도</p>
+                            <div class="flow-steps" id="academyFlow"></div>
+                            <button type="button" class="academy-popup-close" id="academyPopupClose">닫기</button>
+                        </div>
+                    </div>
+                `
+            },
+            cinema: {
+                title: "스타라이트 시네마",
+                tag: "영상 포트폴리오",
+                body: "NUNO의 AI 비디오 포트폴리오 전시관입니다. 상상의 경계를 허무는 다채로운 영상 작품들을 만나보세요.",
+                galleryFromWork: true
+            },
+            studio: {
+                title: "구름 창작소",
+                tag: "기술 스택",
+                bodyHtml: `
+                    <ul>
+                        <li><strong>Planning (Story &amp; Prompt)</strong><br>ChatGPT와 Gemini를 파트너 삼아 막연한 상상을 정교한 텍스트 시나리오로 번역합니다.</li>
+                        <li><strong>Visualizing (Visual Art)</strong><br>Midjourney와 Nano Banana Pro를 활용해 독보적인 질감과 분위기를 가진 비주얼 리소스를 생성합니다.</li>
+                        <li><strong>Animating (Video Magic)</strong><br>Kling과 Grok의 강력한 비디오 생성 능력을 결합하여 정적인 이미지를 살아 움직이는 고해상도 영상으로 변환합니다.</li>
+                        <li><strong>Audio &amp; Finalizing (Sound &amp; Interaction)</strong><br>Suno로 제작한 전용 사운드트랙을 입히고, 인터랙티브 웹 기술로 최종적인 사용자 경험을 완성합니다.</li>
+                    </ul>
+                `
+            },
+            hall: {
+                title: "토끼 마을회관",
+                tag: "작가 소개",
+                bodyHtml: `
+                    <p>상상을 현실로, 기술을 다정한 일상으로 만드는 AI 기획자</p>
+                    <div class="tab-group" role="tablist" aria-label="NUNO 소개 탭">
+                        <button type="button" class="tab-btn is-active" data-tab="profile" role="tab" aria-selected="true">👤 Profile</button>
+                        <button type="button" class="tab-btn" data-tab="work" role="tab" aria-selected="false">🛠 What I Do</button>
+                        <button type="button" class="tab-btn" data-tab="message" role="tab" aria-selected="false">✉ Message</button>
+                    </div>
+                    <div class="tab-panel is-active" data-panel="profile" role="tabpanel">
+                        <h4>Who is NUNO?</h4>
+                        <ul>
+                            <li><strong>현직 초등교사 &amp; AI 에듀테크 가이드</strong><br>교육 현장의 최전선에서 기술이 어떻게 아이들의 성장을 돕는지 매일 연구하고 실천합니다.</li>
+                            <li><strong>AI 융합 크리에이터</strong><br>LLM(기획)부터 이미지, 영상, 음악까지 최신 AI 툴을 자유자재로 조합하여 완성도 높은 결과물을 만들어냅니다.</li>
+                            <li><strong>ENTP형 메이커</strong><br>새로운 기술에 대한 거침없는 도전 정신으로, 상상 속에만 머물던 아이디어를 눈앞의 영상과 프로그램으로 구현합니다.</li>
+                        </ul>
+                    </div>
+                    <div class="tab-panel" data-panel="work" role="tabpanel">
+                        <h4>주요 활동</h4>
+                        <ul>
+                            <li><strong>디지털 스토리텔링</strong><br>AI 애니메이션 및 시네마틱 영상 제작. 텍스트만으로는 전달하기 힘든 깊은 서사와 분위기를 독창적인 비주얼로 구현합니다.</li>
+                            <li><strong>AI 기반 교육 콘텐츠 기획</strong><br>최신 AI 영상 기술을 초등 교육과정과 결합하여, 몰입감 넘치는 혁신적 수업 모델을 제안합니다.</li>
+                            <li><strong>스마트 교육 도구 개발</strong><br>교사의 업무 효율과 수업의 질을 높이는 파이썬 기반 '교사 스마트보드' 등 실용적인 소프트웨어를 직접 제작합니다.</li>
+                        </ul>
+                    </div>
+                    <div class="tab-panel" data-panel="message" role="tabpanel">
+                        <h4>작가의 한 마디</h4>
+                        <p>✨ 저에게 AI는 상상을 현실로 가장 다정하게 번역해 주는 <strong>'마법의 지팡이'</strong>입니다.</p>
+                        <p>🎬 저는 기술이 단순한 도구로 남는 것이 아니라, 누군가의 마음을 움직이는 선명한 시각적 경험과 현장의 실질적인 변화로 이어질 때 가장 큰 가치를 느낍니다.</p>
+                        <p>🌙 상상을 현실로 바꾸는 즐거운 여정에 여러분을 초대합니다!</p>
+                    </div>
+                `
+            },
+            post: {
+                title: "은하수 우체국",
+                tag: "문의하기",
+                bodyHtml: `
+                    <p class="mail-header">반가워요! 여기는 은하수를 타고 온 소식들이 모이는 곳입니다.</p>
+                    <p class="mail-sub">궁금한 점이 있거나 함께 새로운 세상을 설계하고 싶다면, NUNO의 우체통에 소중한 조각을 남겨주세요.</p>
+                    <form class="mail-form" action="https://formspree.io/f/mojpekrk" method="POST" id="mailForm">
+                        <div class="mail-field">
+                            <label for="senderName">보내는 분</label>
+                            <input id="senderName" name="senderName" type="text" placeholder="이름이나 닉네임을 적어주세요" required />
+                        </div>
+                        <div class="mail-field">
+                            <label for="senderEmail">회신받을 주소</label>
+                            <input id="senderEmail" name="senderEmail" type="email" placeholder="답장을 드릴 이메일 주소를 남겨주세요" required />
+                        </div>
+                        <div class="mail-field">
+                            <label>우편물의 종류 (선택)</label>
+                            <div class="mail-options">
+                                <label class="mail-option"><input type="radio" name="mailType" value="Just saying hi!" /> 🎈 반가운 인사와 응원 (Just saying hi!)</label>
+                                <label class="mail-option"><input type="radio" name="mailType" value="Collaboration" /> 🤝 프로젝트 및 협업 제안 (Collaboration)</label>
+                                <label class="mail-option"><input type="radio" name="mailType" value="EduTech Q&A" /> 💡 AI/에듀테크 활용 문의 (EduTech Q&A)</label>
+                                <label class="mail-option"><input type="radio" name="mailType" value="Etc." /> 🚀 기타 상상력 나누기 (Etc.)</label>
+                            </div>
+                        </div>
+                        <div class="mail-field">
+                            <label for="mailMessage">내용</label>
+                            <textarea id="mailMessage" name="message" placeholder="NUNO에게 전할 이야기를 자유롭게 적어주세요" required></textarea>
+                        </div>
+                        <button type="submit" class="mail-submit">메시지 보내기</button>
+                        <div class="mail-success" id="mailSuccess">🌟 전달 성공! 소중한 메시지가 별빛 우체국에 도착했어요.</div>
+                    </form>
+                    <div class="direct-mail">
+                        <strong>직접 메일 보내기</strong> → <a href="mailto:margott616@gmail.com">📧 margott616@gmail.com</a><br />
+                        <span>주소를 클릭하면 바로 메일을 쓰실 수 있어요!</span>
+                    </div>
+                `
+            }
+        };
+
+        function showStill(src) {
+            const current = bgStills[activeStillIndex];
+            const next = bgStills[1 - activeStillIndex];
+            next.style.backgroundImage = `url('${src}')`;
+            next.classList.remove("is-hidden");
+            next.classList.add("is-visible");
+            current.classList.add("is-hidden");
+            current.classList.remove("is-visible");
+            activeStillIndex = 1 - activeStillIndex;
+        }
+
+        function fadeOutActiveVideo() {
+            const activeVideo = bgVideos[activeVideoIndex];
+            if (!activeVideo) return;
+            activeVideo.classList.add("is-fading");
+            activeVideo.classList.add("is-top");
+            setTimeout(() => {
+                activeVideo.pause();
+                activeVideo.classList.remove("is-fading");
+            }, 600);
+        }
+
+        function setActive(button, isActive) {
+            if (isActive) {
+                button.classList.add("is-active");
+            } else {
+                button.classList.remove("is-active");
+            }
+        }
+
+        function hideStill() {
+            bgStills.forEach((still) => {
+                still.classList.remove("is-visible");
+                still.classList.add("is-hidden");
+            });
+        }
+
+        function showVideoInstant(video) {
+            video.style.transition = "none";
+            video.classList.remove("is-hidden");
+            video.classList.add("is-visible");
+            video.classList.remove("is-fading");
+            void video.offsetHeight;
+            video.style.transition = "";
+        }
+
+        if (videoPlayBtn && videoPauseBtn) {
+            videoPlayBtn.addEventListener("click", () => {
+                hideStill();
+                const activeVideo = bgVideos[activeVideoIndex];
+                const attempt = activeVideo.play();
+                if (attempt && typeof attempt.catch === "function") {
+                    attempt.catch(() => {});
+                }
+                hideRabbitOverlay();
+                const inactiveVideo = bgVideos[1 - activeVideoIndex];
+                inactiveVideo.pause();
+                inactiveVideo.currentTime = 0;
+                inactiveVideo.classList.add("is-hidden");
+                inactiveVideo.classList.remove("is-visible");
+                inactiveVideo.classList.remove("is-fading");
+                inactiveVideo.classList.remove("is-top");
+                activeVideo.classList.add("is-visible");
+                activeVideo.classList.remove("is-hidden");
+                activeVideo.classList.remove("is-fading");
+                activeVideo.classList.add("is-top");
+                document.body.classList.add("video-playing");
+                document.body.classList.remove("video-paused");
+                setActive(videoPlayBtn, true);
+                setActive(videoPauseBtn, false);
+                setActive(rabbitShowBtn, false);
+                setActive(rabbitHideBtn, false);
+            });
+
+            videoPauseBtn.addEventListener("click", () => {
+                bgVideos.forEach((video) => video.pause());
+                document.body.classList.remove("video-playing");
+                document.body.classList.add("video-paused");
+                setActive(videoPlayBtn, false);
+                setActive(videoPauseBtn, true);
+                showNotice();
+            });
+        }
+
+        function openModal(key) {
+            const data = buildingData[key];
+            if (!data) return;
+            modalTitle.textContent = data.title;
+            modalTag.textContent = data.tag;
+            modalBody.innerHTML = "";
+            const paragraph = document.createElement("p");
+            if (data.bodyHtml) {
+                modalBody.innerHTML = data.bodyHtml;
+            } else {
+                paragraph.textContent = data.body;
+                modalBody.appendChild(paragraph);
+            }
+            initTabs(modalBody);
+            initAcademyPopup(modalBody);
+            initMailForm(modalBody);
+            if (data.videoSrc) {
+                const video = document.createElement("video");
+                video.src = data.videoSrc;
+                video.controls = true;
+                video.playsInline = true;
+                video.style.width = "100%";
+                video.style.borderRadius = "16px";
+                video.style.marginTop = "18px";
+                modalBody.appendChild(video);
+            }
+            if (data.galleryFromWork) {
+                const galleryItems = [
+                    { title: "Lunar rabbit village", category: "애니메이션", youtubeId: "N7XM185iHDI", showInAll: true },
+                    { title: "Midnight prism", category: "뮤직비디오", youtubeId: "mOK7yFAOors", showInAll: true },
+                    { title: "URBAN HALO", category: "패션필름", youtubeId: "D_HRcRyoUsU", showInAll: true },
+                    { title: "태몽조율국", category: "애니메이션", youtubeId: "DpehAWnijS4", showInAll: true },
+                    { title: "Finding summer sky", category: "뮤직비디오", youtubeId: "SY16gq4YVaI", showInAll: true },
+                    { title: "The dream house", category: "시네마틱", youtubeId: "WoHLDy9e4OI", showInAll: true },
+                    { title: "Dreamcenter", category: "애니메이션", youtubeId: "MgjaSk8TJnU", showInAll: false },
+                    { title: "Demolition woman", category: "뮤직비디오", youtubeId: "UERYsjd5va4", showInAll: false },
+                    { title: "Jodiac nacre", category: "시퀀스", youtubeId: "q2ODJTo_znI", showInAll: false },
+                    { title: "URBAN HALO-behind the scene", category: "패션필름", youtubeId: "GM1H0K-wKhY", showInAll: false },
+                    { title: "Under glass, in rain", category: "패션필름", youtubeId: "OVi6c6akdao", showInAll: false }
+                ];
+                const filterLabels = ["전체", "애니메이션", "패션필름", "시네마틱", "뮤직비디오", "시퀀스"];
+
+                const filterBar = document.createElement("div");
+                filterBar.className = "filter-bar";
+                filterLabels.forEach((label) => {
+                    const btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.className = "filter-btn";
+                    btn.textContent = label;
+                    if (label === "전체") btn.classList.add("is-active");
+                    filterBar.appendChild(btn);
+                });
+                modalBody.appendChild(filterBar);
+
+                const gallery = document.createElement("div");
+                gallery.className = "modal-gallery";
+                galleryItems.forEach((entry) => {
+                    const item = document.createElement("div");
+                    item.className = "modal-video-card";
+                    item.dataset.category = entry.category || "기타";
+                    item.dataset.showAll = entry.showInAll ? "true" : "false";
+                    const mediaHtml = entry.youtubeId
+                        ? `<div class="yt-facade" data-ytid="${entry.youtubeId}">
+                               <img src="https://img.youtube.com/vi/${entry.youtubeId}/maxresdefault.jpg" alt="${entry.title || ''}">
+                               <div class="yt-play"></div>
+                           </div>`
+                        : `<video src="${entry.src}" controls playsinline></video>`;
+                    item.innerHTML = `
+                        ${mediaHtml}
+                        <div class="modal-category">${entry.category || "기타"}</div>
+                        <h4>${entry.title || "영상"}</h4>
+                    `;
+                    gallery.appendChild(item);
+                });
+                modalBody.appendChild(gallery);
+
+                const filterButtons = filterBar.querySelectorAll(".filter-btn");
+                filterButtons.forEach((btn) => {
+                    btn.addEventListener("click", () => {
+                        filterButtons.forEach((b) => b.classList.remove("is-active"));
+                        btn.classList.add("is-active");
+                        const selected = btn.textContent;
+                        gallery.querySelectorAll(".modal-video-card").forEach((card) => {
+                            if (selected === "전체") {
+                                card.style.display = card.dataset.showAll === "true" ? "" : "none";
+                                return;
+                            }
+                            card.style.display = card.dataset.category === selected ? "" : "none";
+                        });
+                    });
+                });
+
+                gallery.querySelectorAll(".modal-video-card").forEach((card) => {
+                    card.style.display = card.dataset.showAll === "true" ? "" : "none";
+                });
+            }
+            modal.classList.add("is-open");
+            modal.setAttribute("aria-hidden", "false");
+            document.body.style.overflow = "hidden";
+        }
+
+        function closeModal() {
+            modal.classList.remove("is-open");
+            modal.setAttribute("aria-hidden", "true");
+            modalBody.innerHTML = "";
+            document.body.style.overflow = "";
+        }
+
+        function initTabs(container) {
+            const tabButtons = container.querySelectorAll(".tab-btn");
+            const tabPanels = container.querySelectorAll(".tab-panel");
+            if (!tabButtons.length || !tabPanels.length) return;
+            tabButtons.forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const target = btn.dataset.tab;
+                    tabButtons.forEach((b) => {
+                        const isActive = b === btn;
+                        b.classList.toggle("is-active", isActive);
+                        b.setAttribute("aria-selected", isActive ? "true" : "false");
+                    });
+                    tabPanels.forEach((panel) => {
+                        panel.classList.toggle("is-active", panel.dataset.panel === target);
+                    });
+                });
+            });
+        }
+
+        function initAcademyPopup(container) {
+            const popup = container.querySelector("#academyPopup");
+            const flow = container.querySelector("#academyFlow");
+            const sub = container.querySelector("#academyPopupSub");
+            const closeBtn = container.querySelector("#academyPopupClose");
+            const triggers = container.querySelectorAll(".academy-module");
+            if (!popup || !flow || !closeBtn || !triggers.length) return;
+
+            const closePopup = () => {
+                popup.classList.remove("is-open");
+                popup.setAttribute("aria-hidden", "true");
+                flow.innerHTML = "";
+            };
+
+            triggers.forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const title = btn.dataset.title || "수업 흐름도";
+                    const flowText = btn.dataset.flow || "";
+                    sub.textContent = title;
+                    flow.innerHTML = "";
+                    flowText.split("→").map((step) => step.trim()).filter(Boolean).forEach((step) => {
+                        const chip = document.createElement("div");
+                        chip.className = "flow-step";
+                        chip.textContent = step;
+                        flow.appendChild(chip);
+                    });
+                    popup.classList.add("is-open");
+                    popup.setAttribute("aria-hidden", "false");
+                });
+            });
+
+            closeBtn.addEventListener("click", closePopup);
+            popup.addEventListener("click", (event) => {
+                if (event.target === popup) closePopup();
+            });
+        }
+
+        function initMailForm(container) {
+            const form = container.querySelector("#mailForm");
+            const success = container.querySelector("#mailSuccess");
+            if (!form || !success) return;
+            form.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const formData = new FormData(form);
+                try {
+                    const response = await fetch(form.action, {
+                        method: "POST",
+                        body: formData,
+                        headers: { Accept: "application/json" }
+                    });
+                    if (response.ok) {
+                        success.classList.add("is-visible");
+                        form.reset();
+                    } else {
+                        success.textContent = "⚠️ 전송에 문제가 생겼어요. 잠시 후 다시 시도해주세요.";
+                        success.classList.add("is-visible");
+                    }
+                } catch (error) {
+                    success.textContent = "⚠️ 전송에 문제가 생겼어요. 잠시 후 다시 시도해주세요.";
+                    success.classList.add("is-visible");
+                }
+            });
+        }
+
+        const noticeMessages = [
+            "안녕하세요? NUNO입니다.",
+            "저의 작업실에 오신 것을 환영합니다.",
+            "각 건물들을 눌러보세요."
+        ];
+        let noticeIndex = 0;
+        let noticeTimer = null;
+
+        function showNotice(reset = false, autoAdvance = true) {
+            if (!notice) return;
+            if (reset) noticeIndex = 0;
+            notice.textContent = noticeMessages[noticeIndex];
+            notice.classList.add("is-visible");
+            if (noticeTimer) clearTimeout(noticeTimer);
+            if (autoAdvance) {
+                noticeTimer = setTimeout(() => {
+                    advanceNotice();
+                }, 3500);
+            }
+        }
+
+        function hideNotice() {
+            if (!notice) return;
+            notice.classList.remove("is-visible");
+        }
+
+        function advanceNotice() {
+            hideNotice();
+            if (noticeIndex >= noticeMessages.length - 1) {
+                return;
+            }
+            noticeIndex += 1;
+            if (noticeTimer) clearTimeout(noticeTimer);
+            noticeTimer = setTimeout(() => {
+                showNotice();
+            }, 500);
+        }
+
+        document.addEventListener("click", (event) => {
+            if (modal.classList.contains("is-open")) return;
+            if (event.target.closest(".control-bar")) return;
+            if (notice && notice.classList.contains("is-visible")) {
+                advanceNotice();
+                return;
+            }
+            const activeVideo = bgVideos[activeVideoIndex];
+            if (!activeVideo.paused && !activeVideo.ended && !hasCompletedFirstLoop && !hasShownNotice) {
+                hasShownNotice = true;
+                showNotice(true, false);
+            }
+        });
+
+        function showRabbitOverlay(src) {
+            if (!rabbitOverlay) return;
+            rabbitOverlay.style.backgroundImage = `url('${src}')`;
+            rabbitOverlay.classList.add("is-visible");
+        }
+
+        function hideRabbitOverlay() {
+            if (!rabbitOverlay) return;
+            rabbitOverlay.classList.remove("is-visible");
+        }
+
+        rabbitShowBtn.addEventListener("click", () => {
+            showRabbitOverlay(rabbitVisibleImage);
+            setActive(rabbitShowBtn, true);
+            setActive(rabbitHideBtn, false);
+        });
+
+        rabbitHideBtn.addEventListener("click", () => {
+            showRabbitOverlay(rabbitHiddenImage);
+            setActive(rabbitShowBtn, false);
+            setActive(rabbitHideBtn, true);
+        });
+
+        hideRabbitOverlay();
+
+        window.addEventListener("load", () => {
+            bgVideos.forEach((video) => {
+                video.addEventListener("timeupdate", () => {
+                    if (isCrossfading) return;
+                    if (video !== bgVideos[activeVideoIndex]) return;
+                    if (!video.duration || Number.isNaN(video.duration)) return;
+                    if (video.currentTime < video.duration - crossfadeSeconds) return;
+                    const nextVideo = bgVideos[1 - activeVideoIndex];
+                    isCrossfading = true;
+                    nextVideo.pause();
+                    nextVideo.currentTime = 0.05;
+                    showVideoInstant(nextVideo);
+                    nextVideo.classList.remove("is-top");
+
+                    const startFade = () => {
+                        if (!hasCompletedFirstLoop) {
+                            hasCompletedFirstLoop = true;
+                            if (!hasShownNotice) {
+                                hasShownNotice = true;
+                                showNotice(true, false);
+                            }
+                        }
+                        const attempt = nextVideo.play();
+                        if (attempt && typeof attempt.catch === "function") {
+                            attempt.catch(() => {});
+                        }
+                        video.classList.add("is-fading");
+                        video.classList.add("is-top");
+                        video.classList.remove("is-visible");
+                        setTimeout(() => {
+                            video.pause();
+                            video.classList.remove("is-fading");
+                            video.classList.add("is-hidden");
+                            video.classList.remove("is-top");
+                            activeVideoIndex = 1 - activeVideoIndex;
+                            bgVideos[activeVideoIndex].classList.add("is-top");
+                            isCrossfading = false;
+                        }, crossfadeSeconds * 1000);
+                    };
+
+                    if (nextVideo.readyState >= 3) {
+                        startFade();
+                    } else {
+                        nextVideo.addEventListener("canplay", startFade, { once: true });
+                    }
+                });
+            });
+
+            const cards = document.querySelectorAll(".work-card video");
+            cards.forEach((video) => {
+                const attempt = video.play();
+                if (attempt && typeof attempt.catch === "function") {
+                    attempt.catch(() => {});
+                }
+            });
+        });
+
+
+        document.addEventListener("click", (e) => {
+            const facade = e.target.closest(".yt-facade");
+            if (!facade) return;
+            const ytid = facade.dataset.ytid;
+            if (!ytid) return;
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://www.youtube.com/embed/${ytid}?autoplay=1&rel=0`;
+            iframe.allow = "autoplay; fullscreen";
+            iframe.allowFullscreen = true;
+            facade.innerHTML = "";
+            facade.appendChild(iframe);
+        });
+
+        function playHoverSound() {
+            if (!hoverSound) return;
+            hoverSound.currentTime = 0;
+            const attempt = hoverSound.play();
+            if (attempt && typeof attempt.catch === "function") {
+                attempt.catch(() => {});
+            }
+        }
+
+        document.querySelectorAll(".hotspot").forEach((hotspot) => {
+            let lastSound = 0;
+            hotspot.addEventListener("mouseenter", () => {
+                const now = Date.now();
+                if (hoverSound && now - lastSound > 250) {
+                    lastSound = now;
+                    playHoverSound();
+                }
+            });
+            hotspot.addEventListener("click", () => {
+                const id = hotspot.dataset.id;
+                openModal(id);
+            });
+        });
+
+        modalClose.addEventListener("click", closeModal);
+        modal.addEventListener("click", (event) => {
+            if (event.target === modal) closeModal();
+        });
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && modal.classList.contains("is-open")) closeModal();
+        });
+
+        document.addEventListener("mousemove", (event) => {
+            const x = Math.max(0, Math.min(window.innerWidth, event.clientX));
+            const y = Math.max(0, Math.min(window.innerHeight, event.clientY));
+            const xPct = ((x / window.innerWidth) * 100).toFixed(1);
+            const yPct = ((y / window.innerHeight) * 100).toFixed(1);
+            coordValue.textContent = `X: ${Math.round(x)}px (${xPct}%) · Y: ${Math.round(y)}px (${yPct}%)`;
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
