@@ -502,6 +502,8 @@
 
         .modal-panel {
             width: min(920px, 100%);
+            max-height: 90vh;
+            overflow-y: auto;
             background: rgba(9, 14, 28, 0.95);
             border: 1px solid rgba(159, 200, 255, 0.3);
             border-radius: 24px;
@@ -936,6 +938,24 @@
         @media (max-width: 720px) {
             .interactive-layer {
                 pointer-events: none;
+            }
+
+            .modal {
+                padding: 12px;
+            }
+
+            .modal-panel {
+                padding: 20px 16px 24px;
+                border-radius: 16px;
+                max-height: 92vh;
+            }
+
+            .modal-title {
+                font-size: 1.2rem;
+            }
+
+            .modal-body {
+                font-size: 1rem;
             }
         }
     </style>
